@@ -1,5 +1,6 @@
 package com.ke.rximagepicker
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
@@ -9,6 +10,7 @@ import android.os.Environment
 import android.provider.MediaStore
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
+import com.tbruyelle.rxpermissions2.RxPermissions
 import io.reactivex.subjects.PublishSubject
 import java.io.File
 import java.text.SimpleDateFormat
@@ -24,11 +26,22 @@ class DelegateFragment : Fragment() {
         retainInstance = true
     }
 
+    @SuppressLint("CheckResult")
     fun start(source: Int) {
         resultSubject = PublishSubject.create()
 
         if (source == RxImagePicker.SOURCE_CAMERA) {
-            takeCameraPicture()
+            RxPermissions(this)
+                .request(Manifest.permission.CAMERA)
+                .subscribe {
+                    if (it) {
+                        takeCameraPicture()
+                    } else {
+                        resultSubject.onNext(Result(null))
+                        resultSubject.onComplete()
+                    }
+                }
+
         } else {
             takeGalleryPicture()
         }
@@ -58,6 +71,7 @@ class DelegateFragment : Fragment() {
         if (requestCode == REQUEST_CODE_CAMERA && resultCode == Activity.RESULT_OK) {
             resultSubject.onNext(Result(currentCameraPhotoUri))
             resultSubject.onComplete()
+
         } else if (requestCode == REQUEST_CODE_GALLERY && resultCode == Activity.RESULT_OK) {
             resultSubject.onNext(Result(data?.data))
             resultSubject.onComplete()
@@ -66,6 +80,8 @@ class DelegateFragment : Fragment() {
             resultSubject.onComplete()
         }
     }
+
+
 
     @SuppressLint("SimpleDateFormat")
     private fun createCameraImageFile(): File {
