@@ -12,7 +12,7 @@ allprojects {
 #### 添加依赖项
 ```
 dependencies {
-	        implementation 'com.github.keluokeda:ApkInstaller:1.0.0'
+	        implementation 'com.github.keluokeda:RxImagePicker:1.0.1'
 	}
 ```
 
